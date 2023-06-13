@@ -1,0 +1,3 @@
+# ninja log v5
+0	16265	1656638840935668097	/data2/wengwm/work/code/EVFI-BE/models/FAC/kernelconv2d/build/temp.linux-x86_64-3.8/KernelConv2D_cuda.o	641e039f201ef056
+0	29746	1656638854407540912	/data2/wengwm/work/code/EVFI-BE/models/FAC/kernelconv2d/build/temp.linux-x86_64-3.8/KernelConv2D_kernel.o	4bbb724a9158c3db

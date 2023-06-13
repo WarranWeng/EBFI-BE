@@ -1,0 +1,192 @@
+experiment: Ours 
+id: name your ex
+
+SCALE: &SCALE 2
+ORI_SCALE: &ORI_SCALE down2
+TIME_BINS: &TIME_BINS 16
+NumFramePerPeriod: &NumFramePerPeriod 16
+NumFramePerBlurry: &NumFramePerBlurry 16 # valid if ExposureMethod is Fixed
+NumPeriodPerSeq: &NumPeriodPerSeq 4 # 4
+SlidingWindowSeq: &SlidingWindowSeq 4 # 4
+NumPeriodPerLoad: &NumPeriodPerLoad 1
+SlidingWindowLoad: &SlidingWindowLoad 1
+ExposureMethod: &ExposureMethod Custom # Auto/Fixed/Custom
+ExposureTime: &ExposureTime [9, 10, 11, 12, 13, 14, 15] # valid if ExposureMethod is Custom
+NeedNeighborGT: &NeedNeighborGT False
+DeblurPretrain: &DeblurPretrain False
+
+BatchSize: &BatchSize 8 # 8
+
+NoiseEnabled: &NoiseEnabled False # False for real-world data
+
+PATH_TO_OUTPUT: &PATH_TO_OUTPUT /path/to/output
+PATH_TO_TRAIN: &PATH_TO_TRAIN /path/to/input/train
+PATH_TO_VALID: &PATH_TO_VALID /path/to/input/valid
+
+model:
+    name: EVFIAutoEx 
+    args: 
+        FrameBasech: 64
+        EventBasech: 64
+        InterCH: 64
+        TB: *TIME_BINS
+        norm: null
+        activation: LeakyReLU
+
+        # exposure decision
+        # without exposure estimation
+        UseGTEx: False # if True, then the configs below are invalid
+        FixEx: null # if not None, then used for controlling, 0~1, and the configs below are invalid
+        # with exposure estimation
+        BlurryFashion: RGBLap # DarkCh, Lap, RGB, RGBDark, RGBLap
+        BLInch: 4 # 1 for DarkCh, Lap; 3 for RGB; 4 for RGBDark, RGBLap
+        UseEvents: True
+        LoadPretrainEX: False # if LoadPretrainEX is True, then must provide PretrainedEXPath
+        PretrainedEXPath: /path/to/pretrainedExposure
+        FrozenEX: False
+
+        # time-exposure control
+        step: 12 # 8 16
+        DualPath: True
+
+        # modification
+        residual: True
+
+        # detail restoration
+        DetailEnabled: True
+        channels: [16, 24, 32, 64] # [16, 24, 32, 64] [32, 64, 96, 128], only valid when enabled is True
+
+optimizer:
+    name: Adam
+    args:
+        lr: !!float 1e-4 # pretrain with 1e-4, finetune with 1e-5
+        # weight_decay: !!float 1e-4
+        betas: [0.9, 0.999]
+        amsgrad: False
+
+# lr_scheduler:
+#     name: ExponentialLR
+#     args:
+#         # step_size: 10000  # epochs or iterations according to the training mode
+#         gamma: 0.95
+
+lr_scheduler:
+    name: StepLR
+    args:
+        step_size: !!float 2e5  # 2e5  # epochs or iterations according to the training mode
+        gamma: 0.5
+
+trainer:
+    output_path: *PATH_TO_OUTPUT
+    epoch_based_train:
+        enabled: False
+        epochs: 2
+        save_period: 1 # save model every 'save_period' epoch
+        train_log_step: 100 # total number for printing train log in one epoch
+        valid_log_step: 100 # total number for printing train log in one epoch
+        valid_step: 1 # epoch steps for validation
+    iteration_based_train:
+        enabled: True
+        iterations: !!float 2e6
+        save_period: 1000 # save model every 'save_period' iteration
+        train_log_step: 50 # iteration steps for printing train log
+        valid_log_step: 50 # iteration steps for printing valid log
+        valid_step: 5000 # iteration steps for validation
+        lr_change_rate: 1 # iteration steps to perform "lr_scheduler.step()"
+    monitor: 'min valid_loss'
+    early_stop: 10 # max valid instervals to continue to train 
+    tensorboard: True
+    accu_step: 1 # increase batch size while saving memory
+    do_validation: True
+    lr_min: !!float 1e-6
+    vis: 
+        enabled: True
+        train_img_writer_num: 20 # iteration steps for visualizing train items
+        valid_img_writer_num: 20  # iteration steps for visualizing valid items
+
+train_dataloader:
+    use_ddp: True
+    path_to_datalist_txt: *PATH_TO_TRAIN
+    batch_size: *BatchSize
+    shuffle: True
+    num_workers: 4
+    pin_memory: True
+    drop_last: True
+    dataset:
+        scale: *SCALE
+        ori_scale: *ORI_SCALE
+        time_bins: *TIME_BINS
+        NumFramePerPeriod: *NumFramePerPeriod
+        NumFramePerBlurry: *NumFramePerBlurry
+        NumPeriodPerSeq: *NumPeriodPerSeq
+        SlidingWindowSeq: *SlidingWindowSeq
+        NumPeriodPerLoad: *NumPeriodPerLoad
+        SlidingWindowLoad: *SlidingWindowLoad
+        ExposureMethod: *ExposureMethod
+        ExposureTime: *ExposureTime
+        NeedNeighborGT: *NeedNeighborGT
+        DeblurPretrain: *DeblurPretrain
+        data_augment:
+            enabled: True
+            augment: ['RandomCrop', 'CenterCrop', "HorizontalFlip", "VertivcalFlip", 'Noise', 'HotPixel']
+            random_crop:
+                enabled: True
+                size: [128, 128] # HxW, related to HR size
+            center_crop:
+                enabled: False
+                size: [128, 128]
+            flip:
+                enabled: True
+                horizontal_prob: 0.5
+                vertical_prob: 0.5
+            noise:
+                enabled: *NoiseEnabled # False for real-world data
+                noise_std: 1.0
+                noise_fraction: 0.05
+            hot_pixel:
+                enabled: *NoiseEnabled # False for real-world data
+                hot_pixel_std: 2.0
+                hot_pixel_fraction: 0.001
+
+valid_dataloader:
+    use_ddp: True
+    path_to_datalist_txt: *PATH_TO_VALID
+    batch_size: 2
+    shuffle: False
+    num_workers: 4
+    pin_memory: True
+    drop_last: False
+    dataset:
+        scale: *SCALE
+        ori_scale: *ORI_SCALE
+        time_bins: *TIME_BINS
+        NumFramePerPeriod: *NumFramePerPeriod
+        NumFramePerBlurry: *NumFramePerBlurry
+        NumPeriodPerSeq: *NumPeriodPerSeq
+        SlidingWindowSeq: *SlidingWindowSeq
+        NumPeriodPerLoad: *NumPeriodPerLoad
+        SlidingWindowLoad: *SlidingWindowLoad
+        ExposureMethod: *ExposureMethod
+        ExposureTime: *ExposureTime
+        NeedNeighborGT: *NeedNeighborGT
+        data_augment:
+            enabled: True
+            augment: ['RandomCrop', 'CenterCrop', "HorizontalFlip", "VertivcalFlip", 'Noise', 'HotPixel']
+            random_crop:
+                enabled: False
+                size: [128, 128]
+            center_crop:
+                enabled: True
+                size: [128, 128]
+            flip:
+                enabled: False
+                horizontal_prob: 0.5
+                vertical_prob: 0.5
+            noise:
+                enabled: *NoiseEnabled # False for real-world data
+                noise_std: 1.0
+                noise_fraction: 0.05
+            hot_pixel:
+                enabled: *NoiseEnabled # False for real-world data
+                hot_pixel_std: 2.0
+                hot_pixel_fraction: 0.001

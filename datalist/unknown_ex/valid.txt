@@ -1,0 +1,10 @@
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_00.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_01.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_05.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_08.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_09.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_10.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_11.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_12.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_13.h5
+/data2/wengwm/work/dataset/unknown_ex/h5/test/test_subset_15.h5
