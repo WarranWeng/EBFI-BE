@@ -7,11 +7,11 @@ Event-based Blurry Frame Interpolation under Blind Exposure by Wenming Weng, Yue
 ## Dataset
 
 Please follow the instructions from directory `generate_dataset` to generate the synthetic dataset.
-Our collected real-world dataset RealBlur-DAVIS can be downloaded from this [site](https://...)
+Our collected real-world dataset RealBlur-DAVIS can be downloaded from this [site](https://rec.ustc.edu.cn/share/421c2a20-0fd3-11ee-bf10-0bc6e486a7d3) with password: 64l7.
 
 ## Pretrained model
 
-The pretrained model will be released in this [site](https://...)
+The pretrained model will be released in this [site](https://rec.ustc.edu.cn/share/7582d0c0-0fd3-11ee-9b7b-233132bcb7d9) with password: uvon.
 
 ## Training and Inference
 
